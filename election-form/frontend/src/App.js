@@ -12,7 +12,8 @@ function App() {
   const [totalPages, setTotalPages] = useState(1);
   const [search, setSearch] = useState("");
 
-  const API = "/api";
+  const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000";
+  const API = API_URL;
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
