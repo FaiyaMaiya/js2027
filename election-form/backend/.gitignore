@@ -1,0 +1,33 @@
+# Python virtual environment
+venv/
+
+# Database file
+eulection-form/backend/voters.db
+
+# Photo uploads
+eulection-form/backend/photos/
+
+# Local backups
+backups/
+
+# Environment files
+.eenv
+
+# IDE files
+.vscode/
+.idea/
+*.pyc
+
+# System files
+.DS_Store
+Thumbs.db
+
+# Log files
+*.log
+
+# Temporary files
+*.tmp
+*.swp
+
+# Node modules (if any)
+node_modules/

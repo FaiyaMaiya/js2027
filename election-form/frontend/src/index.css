@@ -1,0 +1,45 @@
+:root {
+  --eh-red: #D40000;
+  --eh-green: #2D5016;
+  --eh-green-light: #639600;
+  --eh-yellow: #FFCC00;
+  --eh-gold: #A0892C;
+  --eh-black: #000000;
+  --eh-cream: #FFF8E7;
+}
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background: linear-gradient(135deg, var(--eh-green) 0%, var(--eh-red) 100%);
+  color: var(--eh-black);
+  min-height: 100vh;
+}
+button {
+  background-color: var(--eh-red);
+  color: #fff;
+  border: 2px solid var(--eh-gold);
+  border-radius: 6px;
+  padding: 8px 14px;
+  cursor: pointer;
+  font-weight: 600;
+}
+button:hover { background-color: var(--eh-green); }
+button:disabled { opacity: 0.5; cursor: not-allowed; }
+input, select {
+  padding: 8px;
+  margin: 4px;
+  border: 2px solid var(--eh-gold);
+  border-radius: 6px;
+  background-color: var(--eh-cream);
+  color: var(--eh-black);
+}
+h1, h2 { color: var(--eh-yellow); text-shadow: 1px 1px 2px var(--eh-black); }
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}

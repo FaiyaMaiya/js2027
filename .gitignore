@@ -1,0 +1,37 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+venv/
+.venv/
+*.db
+*.db-journal
+*.db-wal
+*.db-shm
+
+# Photos (user uploaded content)
+election-form/backend/photos/*
+!election-form/backend/photos/.gitkeep
+
+# Node
+node_modules/
+frontend/node_modules/
+election-form/frontend/node_modules/
+frontend/dist/
+election-form/frontend/build/
+
+# Environment
+.env
+.env.local
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+

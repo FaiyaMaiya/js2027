@@ -1,0 +1,41 @@
+# Render.com deployment configuration
+# Single service: Flask backend serves both the API and the built React frontend.
+#
+# Usage:
+#   1. Push this repo to GitHub.
+#   2. In Render Dashboard → New Blueprint → select your repo (render.yaml is auto-detected),
+#      OR create a manual Web Service and use the commands below.
+#
+# Required environment variables (set in Render dashboard → Environment):
+#   - SECRET_KEY         : strong random string for session signing (e.g. openssl rand -hex 32)
+#   - ADMIN_USERNAME     : admin username (default: admin)
+#   - ADMIN_PASSWORD     : admin password (STRONGLY RECOMMENDED to set)
+#   - ALLOWED_ORIGINS    : comma-separated list of allowed frontend origins (e.g. https://your-app.onrender.com)
+#   - COOKIE_SECURE      : set to "true" in production (serves cookies over HTTPS only)
+#
+# Optional environment variables:
+#   - SEED_DEMO          : set to "true" to seed demo records (default: off)
+#   - MAX_PHOTO_BYTES    : max photo size in bytes (default: 5242880 / 5MB)
+#   - SESSION_HOURS      : session lifetime in hours (default: 8)
+
+services:
+  - type: web
+    name: voters-database
+    runtime: python
+    plan: free
+    buildCommand: cd frontend && npm install && npm run build && cd ../election-form/backend && pip install -r requirements.txt
+    startCommand: cd election-form/backend && python server.py
+    healthCheckPath: /api/auth/status
+    envVars:
+      - key: SECRET_KEY
+        generateValue: true
+      - key: ADMIN_USERNAME
+        value: admin
+      - key: ADMIN_PASSWORD
+        value: js2027-123
+      - key: ALLOWED_ORIGINS
+        sync: false
+      - key: COOKIE_SECURE
+        value: "true"
+      - key: SEED_DEMO
+        value: "false"
