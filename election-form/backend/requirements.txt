@@ -4,3 +4,4 @@ flask-sqlalchemy>=3.0.0
 flask-login>=0.6.0
 waitress>=2.1.0
 python-dotenv>=1.0.0
+cloudinary>=1.41.0

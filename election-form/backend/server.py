@@ -1,11 +1,12 @@
 import os
 import re
 import base64
-import uuid
 import threading
 import time
 from datetime import timedelta
 
+import cloudinary
+from cloudinary import uploader as cloudinary_uploader
 from flask import (
     Flask, request, jsonify, send_from_directory, abort,
 )
@@ -69,6 +70,15 @@ ALLOWED_ORIGINS = [
 ]
 SESSION_HOURS = int(os.environ.get("SESSION_HOURS", "8"))
 MAX_PHOTO_BYTES = int(os.environ.get("MAX_PHOTO_BYTES", "5242880"))
+CLOUDINARY_CLOUD_NAME = os.environ.get("CLOUDINARY_CLOUD_NAME", "").strip()
+CLOUDINARY_API_KEY = os.environ.get("CLOUDINARY_API_KEY", "").strip()
+CLOUDINARY_API_SECRET = os.environ.get("CLOUDINARY_API_SECRET", "").strip()
+cloudinary.config(
+    cloud_name=CLOUDINARY_CLOUD_NAME,
+    api_key=CLOUDINARY_API_KEY,
+    api_secret=CLOUDINARY_API_SECRET,
+    secure=True,
+)
 # Demo/seed records are opt-in. Keep the production database blank so the
 # admin starts from a clean table: set SEED_DEMO=true to re-enable seeding.
 SEED_DEMO = os.environ.get("SEED_DEMO", "false").lower()
@@ -149,9 +159,13 @@ class Voter(db.Model):
     declarationDate = db.Column(db.String(20))
     vote = db.Column(db.String(20))
     photo_filename = db.Column(db.String(255))
+    photo_url = db.Column(db.String(1000))
+    photo_public_id = db.Column(db.String(255))
 
 
-VOTER_COLUMNS = [c.name for c in Voter.__table__.columns]
+VOTER_COLUMNS = [
+    c.name for c in Voter.__table__.columns if c.name != "photo_public_id"
+]
 
 # Fields that may be supplied by the front-end form
 FORM_FIELDS = [
@@ -240,8 +254,9 @@ def generate_id_number():
 
 def voter_to_dict(v):
     d = {col: getattr(v, col) for col in VOTER_COLUMNS}
-    if v.photo_filename:
-        d["photo_filename"] = v.photo_filename
+    if v.photo_url:
+        d["photo_filename"] = None
+    elif v.photo_filename:
         d["photo_url"] = f"/api/photo/{v.photo_filename}"
     else:
         d["photo_filename"] = None
@@ -249,16 +264,19 @@ def voter_to_dict(v):
     return d
 
 
-ALLOWED_MIME = {
-    "image/png": "png",
-    "image/jpeg": "jpg",
-    "image/webp": "webp",
-    "image/gif": "gif",
-}
+class CloudinaryConfigurationError(RuntimeError):
+    pass
+
+
+class CloudinaryUploadError(RuntimeError):
+    pass
+
+
+ALLOWED_MIME = {"image/png", "image/jpeg", "image/webp", "image/gif"}
 
 
 def save_photo(data_url):
-    """Persist a base64 data URL to the photos directory. Returns filename or None."""
+    """Validate and upload a base64 data URL. Returns Cloudinary metadata or None."""
     if not data_url:
         return None
     m = re.match(r"^data:(?P<type>[^;]+);base64,(?P<data>.+)$", data_url)
@@ -273,11 +291,40 @@ def save_photo(data_url):
         return None
     if len(raw) > MAX_PHOTO_BYTES:
         return None
-    ext = ALLOWED_MIME[mime]
-    filename = f"{uuid.uuid4().hex}.{ext}"
-    with open(os.path.join(PHOTOS_DIR, filename), "wb") as f:
-        f.write(raw)
-    return filename
+    if not all((CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET)):
+        raise CloudinaryConfigurationError("Cloudinary credentials are not configured")
+
+    try:
+        result = cloudinary_uploader.upload(
+            data_url, folder="js2027", resource_type="image"
+        )
+    except Exception as e:
+        raise CloudinaryUploadError("Cloudinary photo upload failed") from e
+    secure_url = result.get("secure_url")
+    public_id = result.get("public_id")
+    if not secure_url or not public_id:
+        raise RuntimeError("Cloudinary upload response omitted secure_url or public_id")
+    return {"url": secure_url, "public_id": public_id}
+
+
+def delete_stored_photo(photo_filename=None, photo_public_id=None):
+    if photo_public_id:
+        result = cloudinary_uploader.destroy(
+            photo_public_id, resource_type="image", invalidate=True
+        )
+        if result.get("result") not in ("ok", "not found"):
+            raise RuntimeError("Cloudinary did not confirm photo deletion")
+    elif photo_filename:
+        os.remove(os.path.join(PHOTOS_DIR, photo_filename))
+
+
+def cleanup_uploaded_photo(uploaded_photo):
+    if not uploaded_photo:
+        return
+    try:
+        delete_stored_photo(photo_public_id=uploaded_photo["public_id"])
+    except Exception:
+        app.logger.exception("Failed to clean up an uncommitted Cloudinary photo")
 
 
 def find_voter(identifier):
@@ -359,6 +406,7 @@ def logout():
 # ─────────────────────────────────────────────────────────────
 @app.route("/api/saveForm", methods=["POST"])
 def save_form():
+    uploaded_photo = None
     try:
         data = request.get_json(silent=True) or {}
         missing = [f for f in REQUIRED_FIELDS if not str(data.get(f, "")).strip()]
@@ -376,8 +424,8 @@ def save_form():
         if Voter.query.filter_by(idNumber=id_number).first():
             return jsonify({"success": False, "message": f"ID number '{id_number}' already exists"}), 409
 
-        photo_filename = save_photo(data.get("photo"))
-        if data.get("photo") and photo_filename is None:
+        uploaded_photo = save_photo(data.get("photo"))
+        if data.get("photo") and uploaded_photo is None:
             return jsonify({"success": False, "message": "Invalid or too-large photo"}), 400
 
         voter = Voter(id=generate_voter_id(), idNumber=id_number)
@@ -385,7 +433,9 @@ def save_form():
             if f == "idNumber" or f not in data:
                 continue
             setattr(voter, f, str(data[f]) if data[f] is not None else None)
-        voter.photo_filename = photo_filename
+        voter.photo_filename = None
+        voter.photo_url = uploaded_photo["url"] if uploaded_photo else None
+        voter.photo_public_id = uploaded_photo["public_id"] if uploaded_photo else None
         db.session.add(voter)
         db.session.commit()
         return jsonify({
@@ -394,8 +444,18 @@ def save_form():
             "id": voter.id,
             "idNumber": voter.idNumber,
         })
+    except CloudinaryConfigurationError as e:
+        db.session.rollback()
+        app.logger.error("saveForm configuration error: %s", e)
+        return jsonify({"success": False, "message": "Photo storage is not configured"}), 503
+    except CloudinaryUploadError:
+        db.session.rollback()
+        cleanup_uploaded_photo(uploaded_photo)
+        app.logger.exception("saveForm Cloudinary upload failed")
+        return jsonify({"success": False, "message": "Photo upload failed"}), 502
     except Exception as e:
         db.session.rollback()
+        cleanup_uploaded_photo(uploaded_photo)
         app.logger.error("saveForm error: %s", e)
         return jsonify({"success": False, "message": "Internal server error"}), 500
 
@@ -470,6 +530,7 @@ def get_form(identifier):
 
 @app.route("/api/updateForm/<identifier>", methods=["PUT"])
 def update_form(identifier):
+    uploaded_photo = None
     try:
         v = find_voter(identifier)
         if not v:
@@ -479,11 +540,16 @@ def update_form(identifier):
         if "dob" in data and data["dob"] and not validate_dob(data["dob"]):
             return jsonify({"success": False, "message": "Invalid date of birth"}), 400
 
+        old_photo_filename = v.photo_filename
+        old_photo_public_id = v.photo_public_id
+        uploaded_photo = None
         if "photo" in data:
-            photo_filename = save_photo(data.get("photo"))
-            if data.get("photo") and photo_filename is None:
+            uploaded_photo = save_photo(data.get("photo"))
+            if data.get("photo") and uploaded_photo is None:
                 return jsonify({"success": False, "message": "Invalid or too-large photo"}), 400
-            v.photo_filename = photo_filename
+            v.photo_filename = None
+            v.photo_url = uploaded_photo["url"] if uploaded_photo else None
+            v.photo_public_id = uploaded_photo["public_id"] if uploaded_photo else None
 
         # The ID number is auto-generated and never editable; any idNumber in
         # the request body is ignored so record sequencing stays intact.
@@ -492,9 +558,30 @@ def update_form(identifier):
                 setattr(v, f, str(data[f]) if data[f] is not None else None)
 
         db.session.commit()
-        return jsonify({"success": True, "message": "Record updated successfully", "record": voter_to_dict(v)})
+        response = {
+            "success": True,
+            "message": "Record updated successfully",
+            "record": voter_to_dict(v),
+        }
+        if "photo" in data and (old_photo_filename or old_photo_public_id):
+            try:
+                delete_stored_photo(old_photo_filename, old_photo_public_id)
+            except Exception:
+                app.logger.exception("Failed to remove replaced photo")
+                response["warning"] = "Record updated, but its previous photo could not be removed"
+        return jsonify(response)
+    except CloudinaryConfigurationError as e:
+        db.session.rollback()
+        app.logger.error("updateForm configuration error: %s", e)
+        return jsonify({"success": False, "message": "Photo storage is not configured"}), 503
+    except CloudinaryUploadError:
+        db.session.rollback()
+        cleanup_uploaded_photo(uploaded_photo)
+        app.logger.exception("updateForm Cloudinary upload failed")
+        return jsonify({"success": False, "message": "Photo upload failed"}), 502
     except Exception as e:
         db.session.rollback()
+        cleanup_uploaded_photo(uploaded_photo)
         app.logger.error("updateForm error: %s", e)
         return jsonify({"success": False, "message": "Internal server error"}), 500
 
@@ -505,14 +592,18 @@ def delete_form(identifier):
         v = find_voter(identifier)
         if not v:
             return jsonify({"message": "Record not found"}), 404
-        if v.photo_filename:
-            try:
-                os.remove(os.path.join(PHOTOS_DIR, v.photo_filename))
-            except OSError:
-                pass
+        photo_filename = v.photo_filename
+        photo_public_id = v.photo_public_id
         db.session.delete(v)
         db.session.commit()
-        return jsonify({"success": True, "message": "Record deleted successfully"})
+        response = {"success": True, "message": "Record deleted successfully"}
+        if photo_filename or photo_public_id:
+            try:
+                delete_stored_photo(photo_filename, photo_public_id)
+            except Exception:
+                app.logger.exception("Failed to remove deleted record photo")
+                response["warning"] = "Record deleted, but its photo could not be removed"
+        return jsonify(response)
     except Exception as e:
         db.session.rollback()
         app.logger.error("deleteForm error: %s", e)
@@ -620,7 +711,11 @@ def ensure_voter_columns():
     """Add missing Voter columns to an existing SQLite database."""
     inspector = inspect(db.engine)
     existing = {col["name"] for col in inspector.get_columns("voters")}
-    additions = {"vote": "VARCHAR(20)"}
+    additions = {
+        "vote": "VARCHAR(20)",
+        "photo_url": "VARCHAR(1000)",
+        "photo_public_id": "VARCHAR(255)",
+    }
     for column, col_type in additions.items():
         if column not in existing:
             with db.engine.begin() as conn:
