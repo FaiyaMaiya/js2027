@@ -67,7 +67,6 @@ ALLOWED_ORIGINS = [
         "http://localhost:3000,http://localhost:8000,http://127.0.0.1:8000",
     ).split(",") if o.strip()
 ]
-COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "false").lower() == "true"
 SESSION_HOURS = int(os.environ.get("SESSION_HOURS", "8"))
 MAX_PHOTO_BYTES = int(os.environ.get("MAX_PHOTO_BYTES", "5242880"))
 # Demo/seed records are opt-in. Keep the production database blank so the
@@ -86,7 +85,10 @@ app.config["SECRET_KEY"] = SECRET_KEY
 DB_PATH = os.environ.get("VOTERS_DB", os.path.join(BASE_DIR, "voters.db"))
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + DB_PATH.replace("\\", "/")
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-app.config["SESSION_COOKIE_SECURE"] = COOKIE_SECURE
+# Cross-site sessions require SameSite=None and Secure; browsers only send
+# these cookies over HTTPS.
+app.config["SESSION_COOKIE_SECURE"] = True
+app.config["SESSION_COOKIE_SAMESITE"] = "None"
 app.config["PERMANENT_SESSION_LIFETIME"] = timedelta(hours=SESSION_HOURS)
 
 db = SQLAlchemy(app)
