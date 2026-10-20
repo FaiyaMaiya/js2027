@@ -70,7 +70,9 @@ ALLOWED_ORIGINS = [
 COOKIE_SECURE = os.environ.get("COOKIE_SECURE", "false").lower() == "true"
 SESSION_HOURS = int(os.environ.get("SESSION_HOURS", "8"))
 MAX_PHOTO_BYTES = int(os.environ.get("MAX_PHOTO_BYTES", "5242880"))
-SEED_DEMO = os.environ.get("SEED_DEMO", "true").lower()
+# Demo/seed records are opt-in. Keep the production database blank so the
+# admin starts from a clean table: set SEED_DEMO=true to re-enable seeding.
+SEED_DEMO = os.environ.get("SEED_DEMO", "false").lower()
 PORT = int(os.environ.get("PORT", "8000"))
 ID_PREFIX = os.environ.get("ID_PREFIX", "JS")
 
@@ -666,9 +668,20 @@ def seed_demo_data():
 with app.app_context():
     db.create_all()
     ensure_voter_columns()
-    if not User.query.filter_by(username=ADMIN_USERNAME).first():
-        db.session.add(User(username=ADMIN_USERNAME, password=ADMIN_PASSWORD))
-        db.session.commit()
+    # Always ensure admin user exists AND password is updated from ENV
+    admin = User.query.filter_by(username=ADMIN_USERNAME).first()
+    if not admin:
+        # also check if admin exists with different username and update it
+        admin = User.query.filter_by(username="admin").first()
+        if admin:
+            admin.username = ADMIN_USERNAME
+            admin.password = ADMIN_PASSWORD
+        else:
+            db.session.add(User(username=ADMIN_USERNAME, password=ADMIN_PASSWORD))
+    else:
+        # Update password every startup from ENV
+        admin.password = ADMIN_PASSWORD
+    db.session.commit()
     seed_demo_data()
 
 
