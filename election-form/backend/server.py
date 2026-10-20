@@ -90,10 +90,14 @@ ID_PREFIX = os.environ.get("ID_PREFIX", "JS")
 # ─────────────────────────────────────────────────────────────
 app = Flask(__name__, static_folder=None)
 app.config["SECRET_KEY"] = SECRET_KEY
-# Explicit absolute path: a relative 'voters.db' would resolve against the
-# Flask instance folder instead of this backend directory.
+# Retain the local SQLite database unless a deployment provides DATABASE_URL.
 DB_PATH = os.environ.get("VOTERS_DB", os.path.join(BASE_DIR, "voters.db"))
-app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///" + DB_PATH.replace("\\", "/")
+DATABASE_URL = os.environ.get("DATABASE_URL", "").strip()
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+app.config["SQLALCHEMY_DATABASE_URI"] = DATABASE_URL or (
+    "sqlite:///" + DB_PATH.replace("\\", "/")
+)
 app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
 # Cross-site sessions require SameSite=None and Secure; browsers only send
 # these cookies over HTTPS.

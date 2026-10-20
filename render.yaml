@@ -12,6 +12,7 @@
 #   - ADMIN_PASSWORD     : admin password (STRONGLY RECOMMENDED to set)
 #   - ALLOWED_ORIGINS    : comma-separated list of allowed frontend origins (e.g. https://your-app.onrender.com)
 #   - CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET : Cloudinary image storage credentials
+#   - DATABASE_URL       : PostgreSQL connection URL (omit to use local SQLite)
 #
 # Optional environment variables:
 #   - SEED_DEMO          : set to "true" to seed demo records (default: off)
@@ -34,6 +35,8 @@ services:
       - key: ADMIN_PASSWORD
         value: js2027-123
       - key: ALLOWED_ORIGINS
+        sync: false
+      - key: DATABASE_URL
         sync: false
       - key: CLOUDINARY_CLOUD_NAME
         sync: false
