@@ -89,6 +89,7 @@ async function createIDCardPdf(record) {
   if (photoSrc) {
     try {
       const image = new Image();
+      image.crossOrigin = "anonymous";
       image.src = photoSrc;
       await image.decode();
       const canvas = document.createElement("canvas");
