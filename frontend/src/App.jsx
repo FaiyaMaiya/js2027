@@ -752,6 +752,7 @@ function App() {
 const [formData, setFormData] = useState({});
   const [photo, setPhoto] = useState(null);
   const [photoMethod, setPhotoMethod] = useState(""); // "" | "upload" | "camera"
+const [cameraFacingMode, setCameraFacingMode] = useState("environment");
   const [viewMode, setViewMode] = useState("home");
   const [searchTerm, setSearchTerm] = useState("");
   const [adminLogin, setAdminLogin] = useState({ username: "", password: "" });
@@ -912,16 +913,33 @@ const fetchPage = useCallback(async (page, search, sort) => {
     if (videoRef.current) videoRef.current.srcObject = null;
   }, []);
 
-  const startCamera = useCallback(async () => {
+  const startCamera = useCallback(async (facingMode = cameraFacingMode) => {
+    stopCamera();
     try {
-      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      if (!navigator.mediaDevices?.getUserMedia) {
+        throw new Error("Camera access is unavailable. Use HTTPS and allow camera permission.");
+      }
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: { ideal: facingMode } },
+        audio: false,
+      });
       streamRef.current = stream;
-      if (videoRef.current) videoRef.current.srcObject = stream;
+      if (videoRef.current) {
+        videoRef.current.srcObject = stream;
+        await videoRef.current.play();
+      }
     } catch (err) {
       console.error("Camera error:", err);
-      alert("Unable to access camera.");
+      stopCamera();
+      alert(err.message || "Unable to access camera. Check camera permission and try again.");
     }
-  }, []);
+  }, [cameraFacingMode, stopCamera]);
+
+  const switchCamera = useCallback(() => {
+    const nextFacingMode = cameraFacingMode === "environment" ? "user" : "environment";
+    setCameraFacingMode(nextFacingMode);
+    if (streamRef.current) startCamera(nextFacingMode);
+  }, [cameraFacingMode, startCamera]);
 
   const capturePhoto = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
@@ -1541,6 +1559,13 @@ const json = await res.json();
                   style={{ ...buttonStyle, flex: "1 1 120px", opacity: photoMethod && photoMethod !== "camera" ? 0.5 : 1 }}
                 >Capture</button>
                 <button
+                  type="button" onClick={switchCamera}
+                  disabled={photoMethod && photoMethod !== "camera"}
+                  style={{ ...buttonStyle, flex: "1 1 160px", opacity: photoMethod && photoMethod !== "camera" ? 0.5 : 1 }}
+                >
+                  Switch to {cameraFacingMode === "environment" ? "front" : "rear"} camera
+                </button>
+                <button
                   type="button" onClick={stopCamera}
                   disabled={photoMethod && photoMethod !== "camera"}
                   style={{ ...buttonStyle, flex: "1 1 140px", opacity: photoMethod && photoMethod !== "camera" ? 0.5 : 1 }}
@@ -1548,7 +1573,7 @@ const json = await res.json();
               </div>
             </div>
             <div style={{ marginTop: 10 }}>
-              <video ref={videoRef} autoPlay style={{ width: "100%", maxWidth: 300, height: "auto", border: "1px solid #ccc", borderRadius: "6px" }} />
+              <video ref={videoRef} autoPlay playsInline muted style={{ width: "100%", maxWidth: 300, height: "auto", border: "1px solid #ccc", borderRadius: "6px" }} />
               <canvas ref={canvasRef} style={{ display: "none" }} />
             </div>
             {photo && (
