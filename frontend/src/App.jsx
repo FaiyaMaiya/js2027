@@ -753,6 +753,7 @@ const [formData, setFormData] = useState({});
   const [photo, setPhoto] = useState(null);
   const [photoMethod, setPhotoMethod] = useState(""); // "" | "upload" | "camera"
 const [cameraFacingMode, setCameraFacingMode] = useState("environment");
+    const [isCameraActive, setIsCameraActive] = useState(false);
   const [viewMode, setViewMode] = useState("home");
   const [searchTerm, setSearchTerm] = useState("");
   const [adminLogin, setAdminLogin] = useState({ username: "", password: "" });
@@ -911,6 +912,7 @@ const fetchPage = useCallback(async (page, search, sort) => {
       streamRef.current = null;
     }
     if (videoRef.current) videoRef.current.srcObject = null;
+    setIsCameraActive(false);
   }, []);
 
   const startCamera = useCallback(async (facingMode = cameraFacingMode) => {
@@ -927,6 +929,7 @@ const fetchPage = useCallback(async (page, search, sort) => {
       if (videoRef.current) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
+        setIsCameraActive(true);
       }
     } catch (err) {
       console.error("Camera error:", err);
@@ -1571,51 +1574,75 @@ const json = await res.json();
             </div>
 
             {/* Camera option */}
-            <div style={{ marginTop: 10 }}>
-              <label style={labelStyle}>Capture with camera <span style={{ color: "#dc2626" }}>*</span></label>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+            <div style={{ marginTop: 16, padding: 14, border: "1px solid #d1d5db", borderRadius: 10, background: "#f8fafc" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", gap: 8, flexWrap: "wrap" }}>
+                <label style={{ ...labelStyle, marginBottom: 0 }}>
+                  Take a photo <span style={{ color: "#dc2626" }}>*</span>
+                </label>
+                <span
+                  role="status"
+                  aria-live="polite"
+                  style={{
+                    padding: "4px 9px",
+                    borderRadius: 999,
+                    fontSize: "0.78rem",
+                    fontWeight: 600,
+                    color: isCameraActive ? "#166534" : "#475569",
+                    background: isCameraActive ? "#dcfce7" : "#e2e8f0",
+                  }}
+                >
+                  {isCameraActive ? "Camera is on" : "Camera is off"}
+                </span>
+              </div>
+              <p style={{ margin: "6px 0 12px", color: "#475569", fontSize: "0.88rem", lineHeight: 1.5 }}>
+                Start the camera, center the person in the frame, then take a photo. The captured image is saved in portrait format.
+              </p>
+              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
                 <button
                   type="button" onClick={startCamera}
                   disabled={photoMethod && photoMethod !== "camera"}
-                  style={{ ...buttonStyle, flex: "1 1 140px", background: "#111827", color: "#fff", opacity: photoMethod && photoMethod !== "camera" ? 0.5 : 1 }}
-                >Open Camera</button>
+                  style={{ ...buttonStyle, flex: "1 1 160px", background: "#111827", color: "#fff", opacity: photoMethod && photoMethod !== "camera" ? 0.5 : 1 }}
+                >{isCameraActive ? "Restart camera" : "Start camera"}</button>
                 <button
                   type="button" onClick={capturePhoto}
-                  disabled={photoMethod && photoMethod !== "camera"}
-                  style={{ ...buttonStyle, flex: "1 1 120px", opacity: photoMethod && photoMethod !== "camera" ? 0.5 : 1 }}
-                >Capture</button>
+                  disabled={!isCameraActive || (photoMethod && photoMethod !== "camera")}
+                  style={{ ...buttonStyle, flex: "1 1 160px", background: isCameraActive ? "#166534" : "#e2e8f0", color: isCameraActive ? "#fff" : "#64748b", opacity: photoMethod && photoMethod !== "camera" ? 0.5 : 1 }}
+                >Take photo</button>
                 <button
                   type="button" onClick={switchCamera}
-                  disabled={photoMethod && photoMethod !== "camera"}
-                  style={{ ...buttonStyle, flex: "1 1 160px", opacity: photoMethod && photoMethod !== "camera" ? 0.5 : 1 }}
+                  disabled={!isCameraActive || (photoMethod && photoMethod !== "camera")}
+                  style={{ ...buttonStyle, flex: "1 1 160px", opacity: !isCameraActive || (photoMethod && photoMethod !== "camera") ? 0.5 : 1 }}
                 >
-                  Switch to {cameraFacingMode === "environment" ? "front" : "rear"} camera
+                  Use {cameraFacingMode === "environment" ? "front" : "rear"} camera
                 </button>
                 <button
                   type="button" onClick={stopCamera}
-                  disabled={photoMethod && photoMethod !== "camera"}
-                  style={{ ...buttonStyle, flex: "1 1 140px", opacity: photoMethod && photoMethod !== "camera" ? 0.5 : 1 }}
-                >Stop Camera</button>
+                  disabled={!isCameraActive || (photoMethod && photoMethod !== "camera")}
+                  style={{ ...buttonStyle, flex: "1 1 140px", opacity: !isCameraActive || (photoMethod && photoMethod !== "camera") ? 0.5 : 1 }}
+                >Close camera</button>
               </div>
-            </div>
-            <div style={{ marginTop: 10 }}>
-              <video
-                ref={videoRef}
-                autoPlay
-                playsInline
-                muted
-                style={{
-                  display: "block",
-                  width: "100%",
-                  maxWidth: 560,
-                  maxHeight: "70vh",
-                  height: "auto",
-                  objectFit: "contain",
-                  background: "#111827",
-                  border: "1px solid #ccc",
-                  borderRadius: "6px",
-                }}
-              />
+              <div style={{ marginTop: 12, position: "relative", width: "100%", maxWidth: 560, minHeight: 180, background: "#111827", borderRadius: 8, overflow: "hidden" }}>
+                <video
+                  ref={videoRef}
+                  autoPlay
+                  playsInline
+                  muted
+                  aria-label="Live camera preview"
+                  style={{
+                    display: "block",
+                    width: "100%",
+                    maxHeight: "70vh",
+                    height: "auto",
+                    objectFit: "contain",
+                    visibility: isCameraActive ? "visible" : "hidden",
+                  }}
+                />
+                {!isCameraActive && (
+                  <div style={{ position: "absolute", inset: 0, display: "grid", placeItems: "center", padding: 16, color: "#fff", textAlign: "center" }}>
+                    Your live camera preview will appear here.
+                  </div>
+                )}
+              </div>
               <canvas ref={canvasRef} style={{ display: "none" }} />
             </div>
             {photo && (
