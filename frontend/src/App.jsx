@@ -943,9 +943,13 @@ const fetchPage = useCallback(async (page, search, sort) => {
 
   const capturePhoto = useCallback(() => {
     if (!videoRef.current || !canvasRef.current) return;
-    canvasRef.current.width = 300;
-    canvasRef.current.height = 225;
-    canvasRef.current.getContext("2d").drawImage(videoRef.current, 0, 0, 300, 225);
+    const { videoWidth, videoHeight } = videoRef.current;
+    if (!videoWidth || !videoHeight) return;
+    canvasRef.current.width = videoWidth;
+    canvasRef.current.height = videoHeight;
+    const context = canvasRef.current.getContext("2d");
+    if (!context) return;
+    context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
     setPhoto(canvasRef.current.toDataURL("image/png"));
     setFormData((prev) => ({ ...prev, photoCaptured: true }));
     stopCamera();
@@ -1573,7 +1577,23 @@ const json = await res.json();
               </div>
             </div>
             <div style={{ marginTop: 10 }}>
-              <video ref={videoRef} autoPlay playsInline muted style={{ width: "100%", maxWidth: 300, height: "auto", border: "1px solid #ccc", borderRadius: "6px" }} />
+              <video
+                ref={videoRef}
+                autoPlay
+                playsInline
+                muted
+                style={{
+                  display: "block",
+                  width: "100%",
+                  maxWidth: 560,
+                  maxHeight: "70vh",
+                  height: "auto",
+                  objectFit: "contain",
+                  background: "#111827",
+                  border: "1px solid #ccc",
+                  borderRadius: "6px",
+                }}
+              />
               <canvas ref={canvasRef} style={{ display: "none" }} />
             </div>
             {photo && (
