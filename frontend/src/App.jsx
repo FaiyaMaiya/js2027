@@ -945,11 +945,33 @@ const fetchPage = useCallback(async (page, search, sort) => {
     if (!videoRef.current || !canvasRef.current) return;
     const { videoWidth, videoHeight } = videoRef.current;
     if (!videoWidth || !videoHeight) return;
-    canvasRef.current.width = videoWidth;
-    canvasRef.current.height = videoHeight;
+    const targetAspectRatio = 4 / 5;
+    let sourceX = 0;
+    let sourceY = 0;
+    let sourceWidth = videoWidth;
+    let sourceHeight = videoHeight;
+    if (videoWidth / videoHeight > targetAspectRatio) {
+      sourceWidth = videoHeight * targetAspectRatio;
+      sourceX = (videoWidth - sourceWidth) / 2;
+    } else {
+      sourceHeight = videoWidth / targetAspectRatio;
+      sourceY = (videoHeight - sourceHeight) / 2;
+    }
+    canvasRef.current.width = Math.round(sourceWidth);
+    canvasRef.current.height = Math.round(sourceHeight);
     const context = canvasRef.current.getContext("2d");
     if (!context) return;
-    context.drawImage(videoRef.current, 0, 0, videoWidth, videoHeight);
+    context.drawImage(
+      videoRef.current,
+      sourceX,
+      sourceY,
+      sourceWidth,
+      sourceHeight,
+      0,
+      0,
+      canvasRef.current.width,
+      canvasRef.current.height,
+    );
     setPhoto(canvasRef.current.toDataURL("image/png"));
     setFormData((prev) => ({ ...prev, photoCaptured: true }));
     stopCamera();
