@@ -59,9 +59,13 @@ def load_dotenv(path=".env"):
 
 load_dotenv(os.path.join(BASE_DIR, ".env"))
 
-SECRET_KEY = os.environ.get("SECRET_KEY", "dev-secret-key-change-in-production")
+SECRET_KEY = os.environ.get("SECRET_KEY")
 ADMIN_USERNAME = os.environ.get("ADMIN_USERNAME", "admin")
-ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD", "js2027-123")
+ADMIN_PASSWORD = os.environ.get("ADMIN_PASSWORD")
+if not SECRET_KEY or SECRET_KEY.startswith("replace-with-"):
+    raise RuntimeError("SECRET_KEY must be configured in the environment")
+if not ADMIN_PASSWORD or ADMIN_PASSWORD.startswith("replace-with-"):
+    raise RuntimeError("ADMIN_PASSWORD must be configured in the environment")
 ALLOWED_ORIGINS = [
     o.strip() for o in os.environ.get(
         "ALLOWED_ORIGINS",
@@ -83,7 +87,7 @@ cloudinary.config(
 # admin starts from a clean table: set SEED_DEMO=true to re-enable seeding.
 SEED_DEMO = os.environ.get("SEED_DEMO", "false").lower()
 PORT = int(os.environ.get("PORT", "8000"))
-ID_PREFIX = os.environ.get("ID_PREFIX", "JS")
+ID_PREFIX = os.environ.get("ID_PREFIX", "JT")
 
 # ─────────────────────────────────────────────────────────────
 # App + extensions
@@ -232,8 +236,8 @@ ID_PATTERN = re.compile(r"^([A-Za-z]+)(\d+)$")
 def generate_id_number():
     """Sequential, collision-free '<PREFIX>###' id number with a thread lock.
 
-    Continues from the highest existing '<PREFIX><number>' value, so records
-    created before this feature (JS001, JS002, ...) keep their numbers.
+    Continues from the highest existing '<PREFIX><number>' value. Existing
+    records keep their current IDs; new records use the configured prefix.
     """
     with id_number_lock:
         max_n = 0

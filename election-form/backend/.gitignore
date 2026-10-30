@@ -2,16 +2,23 @@
 venv/
 
 # Database file
-eulection-form/backend/voters.db
+*.db
+*.db.backup-*
+*.db-journal
+*.db-wal
+*.db-shm
 
 # Photo uploads
-eulection-form/backend/photos/
+photos/*
+!photos/.gitkeep
 
 # Local backups
 backups/
 
 # Environment files
-.eenv
+.env
+.env.*
+!.env.example
 
 # IDE files
 .vscode/

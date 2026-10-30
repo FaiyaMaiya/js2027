@@ -24,7 +24,7 @@ services:
     name: voters-database
     runtime: python
     plan: free
-    buildCommand: cd frontend && npm install && npm run build && cd ../election-form/backend && pip install -r requirements.txt
+    buildCommand: cd frontend && npm ci && npm run build && cd ../election-form/backend && pip install -r requirements.txt
     startCommand: cd election-form/backend && python server.py
     healthCheckPath: /api/auth/status
     envVars:
@@ -33,7 +33,7 @@ services:
       - key: ADMIN_USERNAME
         value: admin
       - key: ADMIN_PASSWORD
-        value: js2027-123
+        sync: false
       - key: ALLOWED_ORIGINS
         sync: false
       - key: DATABASE_URL

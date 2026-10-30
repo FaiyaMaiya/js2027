@@ -68,14 +68,14 @@ async function createIDCardPdf(record) {
   pdf.setFont("helvetica", "bold");
   pdf.setFontSize(8);
   pdf.setTextColor(255, 255, 255);
-  const headerTitle = "Julie Soso - Voter's Identification Card";
+  const headerTitle = "Justin Tkatchenko - Voter's Identification Card";
   const headerIconSize = 5.5;
   const headerGap = 2;
   const headerGroupWidth = headerIconSize + headerGap + pdf.getTextWidth(headerTitle);
   const headerGroupX = (width - headerGroupWidth) / 2;
   try {
     const headerIcon = new Image();
-    headerIcon.src = "/favicon.png";
+    headerIcon.src = "/jt-header.png";
     await headerIcon.decode();
     pdf.addImage(headerIcon, "PNG", headerGroupX, 3.25, headerIconSize, headerIconSize);
   } catch (err) {
@@ -190,9 +190,11 @@ function Spinner() {
 
 // ─── Homepage Slideshow ────────────────────────────────────────
 const slideshowImages = [
-  "/js-main.png", "/js-main1.jpg", "/js-main2.jpg", "/js-main3.webp",
-  "/js-main4.webp", "/js-main5.jpg", "/js-main6.jpg", "/js-main7.jpg",
-  "/js-main8.png", "/js-main9.jpg", "/js-main10.webp", "/js-main11.webp",
+  "/jt-main1.jpg", "/jt-main2.jpg", "/jt-main3.jpg", "/jt-main4.jpg",
+  "/jt-main5.webp", "/jt-main6.png", "/jt-main7.webp", "/jt-main8.webp",
+  "/jt-main9.jpg", "/jt-main10.jpg", "/jt-main11.jpg", "/jt-main12.jpg",
+  "/jt-main13.avif", "/jt-main13.jpg", "/jt-main13.webp",
+  "/jt-main14.jpg", "/jt-main14.webp", "/jt-main15.webp", "/jt-main16.webp",
 ];
 
 function Slideshow({ images, onImageClick }) {
@@ -745,7 +747,7 @@ function App() {
   const recordsPerPage = 20;
 
   useEffect(() => {
-    document.title = "Team JS - 2027 Election";
+    document.title = "Justin Tkatchenko - 2027 Election";
   }, []);
 
   // State
@@ -1270,7 +1272,7 @@ const json = await res.json();
           }}
         >
           <img
-            src="/js-main.png" alt="JS Main"
+            src="/jt-header.png" alt="JT Header"
             style={{ width: "100%", height: "100%", objectFit: "cover", display: "block" }}
           />
         </div>
@@ -1281,13 +1283,13 @@ const json = await res.json();
           margin: "0", fontSize: "clamp(1.05rem, 2.2vw, 1.45rem)",
           color: "#1f2937", fontWeight: 700,
         }}>
-          Eastern Highlands Provincial Seat
+          Port Moresby South Seat
         </h2>
         <h3 style={{
           marginTop: "8px", fontSize: "clamp(0.95rem, 1.9vw, 1.15rem)",
           color: "#374151", fontWeight: 600, fontStyle: "italic",
         }}>
-          Team JS 2027 — "Good Governance"
+          Justin Wayne Tkatchenko, [CBE BEM]
         </h3>
       </header>
 
@@ -1353,88 +1355,49 @@ const json = await res.json();
         <div style={sectionStyle}>
           <h3 style={{ marginTop: 0 }}>Welcome</h3>
           <p style={{ marginBottom: 12, color: "#4b5563", lineHeight: 1.6 }}>
-            This portal is for managing election-related submissions for Julie Soso's Voters in 2027 Papua New Guinea National General Elelction - Eastern Highlands Province Governor Seat.
+            This portal is for managing election-related submissions for Justin Tkatchenko Voter's in 2027 Papua New Guinea National General Elelction - Port Moresby South Seat.
           </p>
           
 <div style={{ margin: "8px 0 16px" }}>
             <Slideshow images={slideshowImages} onImageClick={setSelectedPhoto} />
           </div>
 
-{/* About the Governor */}
-          <div style={sectionStyle}>
-            <h3 style={{ marginTop: 0 }}>About Julie Soso</h3>
-            <p style={{ margin: "0 0 12px", color: "#374151", lineHeight: 1.7, fontSize: "0.98rem" }}>
-              Julie Soso Akeke (born 29 August 1960) is a Papua New Guinean politician. She was the
-              Governor of Eastern Highlands Province from 2012 to 2017.
-            </p>
+{/* About */}
+<div style={sectionStyle}>
+  <h3 style={{ marginTop: 0 }}>About Justin Tkatchenko</h3>
+  <p style={{ margin: "0 0 12px", color: "#374151", lineHeight: 1.7, fontSize: "0.98rem" }}>
+    Justin Wayne Tkatchenko, CBE, BEM (born 2 June 1972) is an Australian and Papua New Guinean politician. He was reappointed Papua New Guinea's Minister of Foreign Affairs on 18 January 2024, having previously held the role from 23 June 2022 until 12 May 2023.
+  </p>
 
-            <h4 style={{ margin: "14px 0 6px", color: "#111827" }}>Background</h4>
-            <p style={{ margin: "0 0 10px", color: "#374151", lineHeight: 1.7, fontSize: "0.95rem" }}>
-              Soso was a broadcaster and women's advocate before entering politics, serving as
-              president of the Eastern Highlands Provincial Council of Women and the deputy
-              chairperson of the district AIDS council. She advocated a ban on firearms and
-              ammunition in Papua New Guinea, called on the provincial government to ban alcohol,
-              and supported reserved seats for women in parliament. She unsuccessfully contested the
-              Eastern Highlands seat at the 1997, 2002 and 2007 elections. A documentary, PNG: The
-              Rules of the Game, was made about her 2007 campaign.
-            </p>
-            <p style={{ margin: "0 0 10px", color: "#374151", lineHeight: 1.7, fontSize: "0.95rem" }}>
-              Soso was married to Paul Akeke for more than thirty years. He died in June 2016.
-            </p>
+  <h4 style={{ margin: "14px 0 6px", color: "#111827" }}>Biography</h4>
+  <p style={{ margin: "0 0 10px", color: "#374151", lineHeight: 1.7, fontSize: "0.95rem" }}>
+    Born in Melbourne, Australia, to Ukrainian immigrant parents, Tkatchenko undertook vocational training in horticulture after secondary school. He later became curator of the National Capital District Botanical Gardens in Papua New Guinea and was appointed a senior official in the district administration in 1997. In 1999, he purchased a small gardening business and expanded it over the following years. He also hosted the television gardening program <em>The Happy Gardener</em>.
+  </p>
+  <p style={{ margin: "0 0 10px", color: "#374151", lineHeight: 1.7, fontSize: "0.95rem" }}>
+    Tkatchenko received the British Empire Medal in 1997 for services to the orchid industry and tropical gardening. In 2018, he was appointed a Commander of the Order of the British Empire.
+  </p>
 
-            <h4 style={{ margin: "14px 0 6px", color: "#111827" }}>Election to Parliament</h4>
-            <p style={{ margin: "0 0 10px", color: "#374151", lineHeight: 1.7, fontSize: "0.95rem" }}>
-              Soso was elected to the National Parliament at the 2012 election, winning the Eastern
-              Highlands governorship on her fourth attempt. She was the first woman to be elected to
-              parliament from Papua New Guinea's Highlands region. She was elected as a member of the
-              Triumph Heritage Empowerment Party. Former Governor-General Sir Paulias Matane stated
-              that she had "created history as the first female governor and MP in the Highlands
-              region, where politics was dominated and deemed as an art for men only." In her first
-              months in office, she raised concerns around the enforcement of liquor licensing in her
-              province, criticised the national government for poor facilities for treating women with
-              cervical and breast cancers, and joined women colleagues Loujaya Toni and Delilah Gore
-              in threatening to withdraw from the government if a bill introducing reserved seats for
-              women was reintroduced. She credited former MP Louis Ambane with her changed position on
-              reserved seats, stating that he had convinced her that women had to compete equally. In
-              December 2012, she proposed introducing a ban on polygamy.
-            </p>
-            <p style={{ margin: "0 0 10px", color: "#374151", lineHeight: 1.7, fontSize: "0.95rem" }}>
-              In 2014, Soso was a member of the Parliamentary Referral Committee on Education, which
-              looked into issues around the payment of teachers' salaries and entitlements, and was
-              widely praised for its investigation. She again revisited her position on reserved
-              seats for women in April 2014, arguing that the bill should be "re-looked at" because
-              "women...throughout the country still say they do not have a voice." In November 2014,
-              her party crossed into Opposition; although she was absent from the initial
-              announcement, she subsequently announced that she would join them in Opposition. In
-              2014, she initiated the Eastern Highlands Women's Credit Scheme, a women's microfinance
-              scheme. In July 2015, Soso defected back to the government, leaving her party for the
-              People's National Congress.
-            </p>
+  <h4 style={{ margin: "14px 0 6px", color: "#111827" }}>Parliamentary and Ministerial Career</h4>
+  <p style={{ margin: "0 0 10px", color: "#374151", lineHeight: 1.7, fontSize: "0.95rem" }}>
+    After becoming a Papua New Guinean citizen in 2006, Tkatchenko contested the 2007 general election but was defeated by incumbent Carol Kidu in Port Moresby South. Following Kidu's retirement, he won the seat in 2012 and entered Parliament with the Social Democratic Party. He became Minister of Sports in Peter O'Neill's government and later joined O'Neill's People's National Congress.
+  </p>
+  <p style={{ margin: "0 0 10px", color: "#374151", lineHeight: 1.7, fontSize: "0.95rem" }}>
+    In 2016, Tkatchenko was given ministerial responsibility for preparations to host the 2018 APEC summit in Papua New Guinea. Re-elected in 2017, he retained that responsibility and became Minister of Lands and Physical Planning. After the O'Neill government lost parliamentary support in 2019, Tkatchenko returned to the Social Democratic Party and supported James Marape, who appointed him Minister of Housing and Urban Development.
+  </p>
 
-            <h4 style={{ margin: "14px 0 6px", color: "#111827" }}>Provincial Administration Issues and Defeat</h4>
-            <p style={{ margin: "0 0 10px", color: "#374151", lineHeight: 1.7, fontSize: "0.95rem" }}>
-              In mid-2014, Soso faced substantial criticism for long delays in her appointment of a
-              permanent administrator for the provincial government after she rejected two shortlists
-              of candidates in their entirety. When the National Executive Council attempted to fill
-              the position in late 2014, appointing Solomon Tato, Soso appointed her own candidate,
-              resulting in a standoff as both candidates attempted to take control of the
-              administration building. Soso admitted that major projects had "not been implemented
-              because the provincial administration is in turmoil", but blamed her predecessor as
-              Governor. She also clashed bitterly with some open MPs in the province, most
-              prominently Goroka MP Bire Kimisopa.
-            </p>
-            <p style={{ margin: "0 0 10px", color: "#374151", lineHeight: 1.7, fontSize: "0.95rem" }}>
-              In September 2015, the National Court held that Soso's nominee was acting
-              administrator, being that Tato had been suspended on misappropriation charges since his
-              appointment. The standoff continued, however, as Tato sought to lift his suspension and
-              resume his duties, resulting in further court hearings, which resulted in the National
-              Court ordering Tato's reinstatement in January 2016. In February 2016, the Supreme
-              Court upheld Tato being restored to office, pending an outcome of an appeal. Soso then
-              wrote to him instructing that he step down, for which the Supreme Court fined her
-              K15,000 for contempt of court. Soso recontested her seat for the People's National
-              Congress at the 2017 election, but was defeated.
-            </p>
-          </div>
+  <h4 style={{ margin: "14px 0 6px", color: "#111827" }}>Foreign Affairs and Public Service</h4>
+  <p style={{ margin: "0 0 10px", color: "#374151", lineHeight: 1.7, fontSize: "0.95rem" }}>
+    After the 2022 general election, Tkatchenko became Minister of Foreign Affairs. He spoke publicly about Papua New Guinea's interest in a security cooperation agreement with Australia, following the Solomon Islands-China agreement. Later that year, he reaffirmed Papua New Guinea's recognition of Indonesian sovereignty over western New Guinea and called on Indonesian Papuan refugees in Papua New Guinea not to declare independence, citing the importance of relations with Jakarta.
+  </p>
+  <p style={{ margin: "0 0 10px", color: "#374151", lineHeight: 1.7, fontSize: "0.95rem" }}>
+    In May 2023, Tkatchenko represented Prime Minister Marape at the coronation of Charles III as part of Papua New Guinea's delegation, accompanied by his eldest daughter, Savannah. A video she posted from the trip prompted public criticism. In a media interview, Tkatchenko used insulting language about the critics; he later apologised. Marape said he was offended by the remarks but urged the public to forgive him. Tkatchenko resigned as Foreign Minister the following day, and Marape assumed the portfolio.
+  </p>
+
+  <h4 style={{ margin: "14px 0 6px", color: "#111827" }}>Return to Cabinet</h4>
+  <p style={{ margin: "0 0 10px", color: "#374151", lineHeight: 1.7, fontSize: "0.95rem" }}>
+    On 18 January 2024, Tkatchenko was reappointed Minister of Foreign Affairs in a cabinet reshuffle, taking over the portfolio from Marape.
+  </p>
+</div>
           <h4 ref={savedRecordsHeadingRef} style={{ margin: "12px 0 10px" }}>Saved Records</h4>
           <RecordList {...recordListProps} />
         </div>

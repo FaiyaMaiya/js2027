@@ -1,4 +1,5 @@
 {
+  "name": "justin-tkatchenko-voters-database",
   "dependencies": {
     "jspdf": "^4.2.1"
   }

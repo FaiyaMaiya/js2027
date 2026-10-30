@@ -1,36 +1,46 @@
-# js2027
-JS Voter's Database 2027 Election
+# Justin Tkatchenko Voter Database
 
-Get a site-specific icon for your Render.com deployment using `render.yaml`:
+Voter-record management application with a React/Vite frontend and a Flask API.
+The Render blueprint builds the frontend and serves it from the Flask service.
 
-```yaml
-icon: https://raw.githubusercontent.com/user/repo/main/js-main.png
-```
+## Local setup
 
-For the `js-main.png` image:
+1. Create the backend virtual environment and install its requirements:
 
-**Source:** It's in the built frontend distribution at `frontend/dist/js-main.png`
+   ```powershell
+   cd election-form\backend
+   python -m venv venv
+   .\venv\Scripts\python.exe -m pip install -r requirements.txt
+   Copy-Item .env.example .env
+   ```
 
-**Usage in code:**
-1. Front end renders it in the header with `src="/js-main.png"`
-2. Server serves it via `/api/photo/<filename>` - already configured
-3. Use the same path as icon URL for Render
+2. In `election-form/backend/.env`, replace `SECRET_KEY` and `ADMIN_PASSWORD`
+   with unique values before starting the backend. Generate a session secret
+   with:
 
-Your browser tab will show the JS circle icon from this image.
+   ```sh
+   python -c "import secrets; print(secrets.token_hex(32))"
+   ```
 
-Set this in your Render dashboard:
-- Service → Settings → Web
-- Add `js-main.png` as a static asset
-- Use `/js-main.png` as the icon URL
+3. Install frontend dependencies and start the development server from
+   `frontend/`:
 
-Or directly modify `render.yaml`:
-```yaml
-services:
-  - type: web
-    name: voters-database
-    runtime: python
-    plan: free
-    buildCommand: ...
-    startCommand: ...
-    icon: js-main.png
-```
+   ```sh
+   npm ci
+   npm run dev
+   ```
+
+   Set `VITE_API_URL=http://localhost:8000` in `frontend/.env.local` when the
+   Vite frontend is connecting to the local Flask server.
+
+The backend uses `election-form/backend/voters.db` by default. Local databases,
+backups, environment files, uploaded photos, dependency folders, and build
+outputs are excluded from Git.
+
+## Deployment
+
+Create a Render Blueprint from `render.yaml`. Set the required environment
+variables in Render, including a unique `ADMIN_PASSWORD`, `ALLOWED_ORIGINS`,
+and database and Cloudinary settings as needed. Render generates `SECRET_KEY`
+for the service. Never commit `.env` files, production credentials, database
+files, or uploaded voter data.
